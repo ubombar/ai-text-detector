@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AI Text Detector{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/">AI Text Detector</a>
+      {% if user %}
+      <nav class="nav">
+        <a href="/">Analyze</a>
+        <a href="/about">About</a>
+        <a href="/logout">Log out</a>
+      </nav>
+      {% endif %}
+    </div>
+  </header>
+  <main class="wrap">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="wrap site-footer">Scores are statistical evidence, not proof.</footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}About · AI Text Detector{% endblock %}
+{% block content %}
+<article class="card prose">
+  <h1>About</h1>
+  <p>This tool runs four detectors locally and combines them into a verdict. No text leaves your machine.</p>
+
+  <h2>Methods</h2>
+  <h3>Binoculars</h3>
+  <p>Ratio of the text's log-perplexity under the instruct model to the cross-perplexity between the base and instruct models. <strong>Low = AI.</strong></p>
+  <h3>Fast-DetectGPT</h3>
+  <p>Analytic conditional probability curvature, expressed as a z-score: how much more likely the observed tokens are than alternatives sampled from the model. <strong>High = AI.</strong></p>
+  <h3>DeBERTa classifier</h3>
+  <p>Supervised classifier <code>desklib/ai-text-detector-v1.01</code> outputting P(AI). Long texts are chunked and the chunk scores aggregated. <strong>High = AI.</strong></p>
+  <h3>GLTR</h3>
+  <p>Each token is ranked by GPT-2's prediction. Buckets: top 10 (<span class="tok b0">green</span>), top 100 (<span class="tok b1">yellow</span>), top 1000 (<span class="tok b2">red</span>), rest (<span class="tok b3">purple</span>). Machine text is dominated by green. GLTR is <em>display only</em> and does not vote.</p>
+
+  <h2>Voting</h2>
+  <p>Binoculars, Fast-DetectGPT and the classifier each vote. The overall verdict is AI or human when at least <strong>2 of 3</strong> agree; otherwise it is inconclusive.</p>
+
+  <h2>Metrics</h2>
+  <ul>
+    <li><strong>AUROC</strong> — threshold-independent separability.</li>
+    <li><strong>TPR @ 1% FPR</strong> — the most important: how much AI text is caught while wrongly flagging only 1% of humans.</li>
+    <li><strong>FPR</strong> — rate of human text flagged as AI.</li>
+    <li><strong>Calibration</strong> — whether scores/thresholds match observed rates on your own data.</li>
+  </ul>
+
+  <h2>Calibration</h2>
+  <p>Thresholds can be re-fit on a folder of known human-written texts:</p>
+  <pre><code>uv run python -m app.calibrate path/to/human_texts/</code></pre>
+
+  <h2>Models</h2>
+  <ul>
+    <li>Qwen2.5-3B + Qwen2.5-3B-Instruct (shared by Binoculars and Fast-DetectGPT)</li>
+    <li>DeBERTa-v3 classifier (desklib/ai-text-detector-v1.01)</li>
+    <li>GPT-2 (GLTR)</li>
+  </ul>
+
+  <h2>Caveats</h2>
+  <ul>
+    <li>Scores are evidence, not proof. Never use them as the sole basis for an accusation.</li>
+    <li>Detectors produce more false positives on non-native English writers (Liang et al., 2023).</li>
+    <li>Paraphrasing or light editing can evade detection.</li>
+    <li>Texts under 250 words give low-confidence results; under 100 tokens are refused.</li>
+  </ul>
+</article>
+{% endblock %}

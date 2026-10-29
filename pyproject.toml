@@ -1,0 +1,25 @@
+[project]
+name = "ai-text-detector"
+version = "0.1.0"
+description = "Local web app that runs Binoculars, Fast-DetectGPT, a DeBERTa classifier and GLTR on a piece of text."
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "jinja2>=3.1",
+    "python-multipart>=0.0.9",
+    "itsdangerous>=2.2",
+    "bcrypt>=4.2",
+    "python-dotenv>=1.0",
+    "torch>=2.4",
+    "transformers>=4.46,<5",
+    "accelerate>=1.0",
+    "sentencepiece>=0.2",
+    "numpy>=1.26",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

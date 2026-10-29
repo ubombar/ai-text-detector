@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <label for="text" class="label">Text to analyze</label>
+  <textarea id="text" rows="12" placeholder="Paste at least ~250 words for a reliable result…"></textarea>
+  <div class="row">
+    <span id="wordcount" class="muted">0 words</span>
+    <button id="analyze" class="btn" type="button">Analyze</button>
+  </div>
+</section>
+
+<div id="loading" class="loading" hidden><span class="spinner"></span> Running 4 detectors…</div>
+<div id="error" class="banner banner-error" hidden></div>
+
+<section id="results" hidden>
+  <div id="overall" class="verdict"></div>
+  <div id="warning" class="banner banner-warn" hidden></div>
+  <p id="meta" class="muted"></p>
+  <div id="methods" class="grid"></div>
+
+  <section class="card">
+    <h2>GLTR token ranks (GPT-2)</h2>
+    <div id="gltr-bar" class="stack"></div>
+    <div class="legend">
+      <span><i class="b0"></i>top 10</span><span><i class="b1"></i>top 100</span>
+      <span><i class="b2"></i>top 1000</span><span><i class="b3"></i>rest</span>
+    </div>
+    <div id="gltr-tokens" class="tokens"></div>
+  </section>
+
+  <section class="card">
+    <h2>Per-sentence (Binoculars, indicative only)</h2>
+    <div id="sentences" class="sentences"></div>
+  </section>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/app.js"></script>{% endblock %}

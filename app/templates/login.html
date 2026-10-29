@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Log in · AI Text Detector{% endblock %}
+{% block content %}
+<section class="card login">
+  <h1>Log in</h1>
+  {% if error %}<div class="banner banner-error">{{ error }}</div>{% endif %}
+  <form method="post" action="/login">
+    <label>Username <input name="username" autocomplete="username" required autofocus></label>
+    <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+    <button class="btn" type="submit">Log in</button>
+  </form>
+</section>
+{% endblock %}
