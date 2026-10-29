@@ -37,6 +37,9 @@ class Classifier:
         # DeBERTa-v3 is unstable in fp16, keep it in fp32 (~1.7 GB).
         self.model = DesklibAIDetectionModel.from_pretrained(config.CLASSIFIER_MODEL).to(self.device).eval()
 
+    def count_tokens(self, text: str) -> int:
+        return len(self.tokenizer(text, add_special_tokens=False).input_ids)
+
     @torch.inference_mode()
     def score(self, text: str) -> float:
         """Length-weighted mean P(AI) over overlapping 512-token chunks."""

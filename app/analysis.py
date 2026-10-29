@@ -17,7 +17,15 @@ METHOD_INFO = {
     "classifier": ("DeBERTa classifier", "higher_is_ai"),
     "gltr": ("GLTR (top-10 share)", "higher_is_ai"),
 }
-VOTING = ("binoculars", "fast_detectgpt", "classifier")
+PAIR_METHODS = ("binoculars", "fast_detectgpt")
+
+
+def voting() -> tuple:
+    return (*PAIR_METHODS, "classifier") if config.ENABLE_LLM_PAIR else ("classifier",)
+
+
+def enabled_methods() -> list:
+    return [m for m in METHOD_INFO if config.ENABLE_LLM_PAIR or m not in PAIR_METHODS]
 
 
 class TextTooShort(ValueError):
@@ -27,7 +35,8 @@ class TextTooShort(ValueError):
 def models() -> dict:
     """Load lazily on first request, then keep in memory."""
     if not _models:
-        _models["pair"] = LLMPair()
+        if config.ENABLE_LLM_PAIR:
+            _models["pair"] = LLMPair()
         _models["classifier"] = Classifier()
         _models["gltr"] = GLTR()
     return _models
@@ -59,14 +68,15 @@ def score_sentences(text, pair_scores, threshold):
 
 
 def overall(verdicts: dict) -> dict:
-    votes = [verdicts[m] for m in VOTING]
-    n_ai, n_human = votes.count("ai"), votes.count("human")
-    if n_ai >= 2:
+    voters = [m for m in verdicts if m in voting()]
+    votes = [verdicts[m] for m in voters]
+    n_ai, n_human, need = votes.count("ai"), votes.count("human"), len(votes) // 2 + 1
+    if n_ai >= need:
         v = "ai"
-        summary = f"{n_ai} of 3 detectors say this looks AI-generated."
-    elif n_human >= 2:
+        summary = f"{n_ai} of {len(votes)} detectors say this looks AI-generated."
+    elif n_human >= need:
         v = "human"
-        summary = f"{n_human} of 3 detectors say this looks human-written."
+        summary = f"{n_human} of {len(votes)} detectors say this looks human-written."
     else:
         v = "inconclusive"
         summary = "The detectors disagree or are near their thresholds."
@@ -78,20 +88,21 @@ def analyze(text: str) -> dict:
     t0 = time.time()
     with _lock:  # one analysis at a time; models share the GPU
         m = models()
-        n_tokens = m["pair"].count_tokens(text)
+        counter = m["pair"] if "pair" in m else m["classifier"]
+        n_tokens = counter.count_tokens(text)
         if n_tokens < config.MIN_TOKENS:
             raise TextTooShort(f"Text is too short ({n_tokens} tokens). Need at least {config.MIN_TOKENS}.")
-        pair = m["pair"].score(text)
+        pair = m["pair"].score(text) if "pair" in m else None
         clf = m["classifier"].score(text)
         gltr = m["gltr"].analyze(text)
 
     th = config.load_thresholds()
     scores = {
-        "binoculars": pair.binoculars,
-        "fast_detectgpt": pair.fast_detectgpt,
         "classifier": clf,
         "gltr": gltr["fractions"][0],
     }
+    if pair:
+        scores["binoculars"], scores["fast_detectgpt"] = pair.binoculars, pair.fast_detectgpt
     details = {
         "binoculars": "Perplexity relative to cross-perplexity between base and instruct model.",
         "fast_detectgpt": "z-score of the text's log-likelihood vs. what the model would sample.",
@@ -99,7 +110,8 @@ def analyze(text: str) -> dict:
         "gltr": "Share of tokens in GPT-2's top-10 predictions. Shown for context, not counted in the vote.",
     }
     methods, verdicts = [], {}
-    for mid, (name, direction) in METHOD_INFO.items():
+    for mid in enabled_methods():
+        name, direction = METHOD_INFO[mid]
         verdicts[mid] = verdict(scores[mid], th[mid], direction, config.UNCERTAIN_BAND[mid])
         methods.append({"id": mid, "name": name, "score": scores[mid], "threshold": th[mid],
                         "direction": direction, "verdict": verdicts[mid], "detail": details[mid]})
@@ -108,7 +120,7 @@ def analyze(text: str) -> dict:
     warning = None
     if n_words < config.LOW_CONFIDENCE_WORDS:
         warning = f"Only {n_words} words. Results under {config.LOW_CONFIDENCE_WORDS} words are low confidence."
-    if pair.n_tokens >= config.MAX_TOKENS:
+    if n_tokens > config.MAX_TOKENS:
         warning = (warning + " " if warning else "") + f"Only the first {config.MAX_TOKENS} tokens were scored."
 
     return {
@@ -119,5 +131,5 @@ def analyze(text: str) -> dict:
         "overall": overall(verdicts),
         "methods": methods,
         "gltr": gltr,
-        "sentences": score_sentences(text, pair, th["binoculars"]),
+        "sentences": score_sentences(text, pair, th["binoculars"]) if pair else [],
     }

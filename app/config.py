@@ -17,6 +17,8 @@ INSTRUCT_MODEL = os.getenv("INSTRUCT_MODEL", "Qwen/Qwen2.5-3B-Instruct")
 CLASSIFIER_MODEL = os.getenv("CLASSIFIER_MODEL", "desklib/ai-text-detector-v1.01")
 GLTR_MODEL = os.getenv("GLTR_MODEL", "gpt2")
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", "1024"))
+# Binoculars + Fast-DetectGPT need the ~12 GB Qwen pair. Off by default.
+ENABLE_LLM_PAIR = os.getenv("ENABLE_LLM_PAIR", "false").lower() in ("1", "true", "yes")
 
 MIN_TOKENS = 100
 LOW_CONFIDENCE_WORDS = 250

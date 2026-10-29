@@ -22,7 +22,7 @@ def main(folder: str) -> None:
     if fpr == 0.05:
         print(f"Only {len(files)} files; calibrating at 5% FPR. Use 100+ for 1%.")
 
-    scores = {m: [] for m in analysis.METHOD_INFO}
+    scores = {m: [] for m in analysis.enabled_methods()}
     for f in files:
         try:
             report = analysis.analyze(f.read_text())
@@ -34,7 +34,8 @@ def main(folder: str) -> None:
         print(f"scored {f.name}")
 
     thresholds = {}
-    for mid, (_, direction) in analysis.METHOD_INFO.items():
+    for mid in analysis.enabled_methods():
+        direction = analysis.METHOD_INFO[mid][1]
         vals = np.array(scores[mid])
         if len(vals) == 0:
             continue

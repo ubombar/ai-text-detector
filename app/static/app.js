@@ -80,6 +80,7 @@
     }
     $("gltr-tokens").replaceChildren(frag);
 
+    $("sentences-title").hidden = !(d.sentences || []).length;
     $("sentences").replaceChildren(...(d.sentences || []).flatMap((s) => {
       const sp = el("span", `s-${s.verdict}`, s.text);
       sp.title = `score ${Number(s.score).toFixed(3)} · ${LABEL[s.verdict] || s.verdict}`;

@@ -9,7 +9,7 @@ A small local web app that checks whether a piece of text looks AI-generated. It
 | [desklib DeBERTa-v3 classifier](https://huggingface.co/desklib/ai-text-detector-v1.01) | trained | P(AI), averaged over 512-token chunks | higher |
 | [GLTR](https://github.com/HendrikStrobelt/detecting-fake-text) | visual | share of tokens in GPT-2's top-10 | higher (display only) |
 
-Binoculars and Fast-DetectGPT share one model pair (`Qwen2.5-3B` + `Qwen2.5-3B-Instruct`), so both come from the same two forward passes. The overall verdict needs **2 of 3** votes from Binoculars, Fast-DetectGPT and the classifier. GLTR is only shown for context.
+Binoculars and Fast-DetectGPT share one model pair (`Qwen2.5-3B` + `Qwen2.5-3B-Instruct`, ~12 GB), so both come from the same two forward passes. **They are disabled by default** (`ENABLE_LLM_PAIR=false`) while their calibration with the Qwen pair is being fixed, and the verdict then comes from the classifier alone. With `ENABLE_LLM_PAIR=true`, the verdict needs a majority (2 of 3) of Binoculars, Fast-DetectGPT and the classifier. GLTR is only shown for context.
 
 > **Scores are statistical evidence, not proof.** These detectors produce false positives, especially on short, formal or non-native-English writing, and paraphrasing fools them.
 
@@ -34,6 +34,13 @@ This writes `thresholds.json`, with each threshold set so that only ~1% of those
 
 ## Configuration
 See `.env.example` to swap models (e.g. `tiiuae/falcon-7b` + `falcon-7b-instruct`, the original Binoculars pair, if you have more memory) or change `MAX_TOKENS`.
+
+## Evaluate on RAID
+```bash
+uv run --with pandas --with pyarrow python scripts/build_dataset.py   # ~2.4 GB download
+uv run python scripts/evaluate.py --write-thresholds
+```
+Reports AUROC and TPR@1%FPR on held-out human and AI texts from [RAID](https://github.com/liamdugan/raid), and fits thresholds on a separate human split.
 
 ## Tests
 ```bash

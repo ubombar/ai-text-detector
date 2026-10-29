@@ -5,3 +5,4 @@ __pycache__/
 .pytest_cache/
 thresholds.json
 .DS_Store
+data/

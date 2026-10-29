@@ -37,6 +37,13 @@ def test_verdict():
     assert analysis.verdict(3.0, 2.0, "higher_is_ai", 0.3) == "ai"
 
 
-def test_overall_needs_two_votes():
+def test_overall_needs_two_votes(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_LLM_PAIR", True)
     assert analysis.overall({"binoculars": "ai", "fast_detectgpt": "ai", "classifier": "human"})["verdict"] == "ai"
     assert analysis.overall({"binoculars": "ai", "fast_detectgpt": "uncertain", "classifier": "human"})["verdict"] == "inconclusive"
+
+
+def test_overall_classifier_only(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_LLM_PAIR", False)
+    assert analysis.enabled_methods() == ["classifier", "gltr"]
+    assert analysis.overall({"classifier": "ai", "gltr": "human"})["verdict"] == "ai"
